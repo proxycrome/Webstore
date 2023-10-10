@@ -1,13 +1,18 @@
 import { Component, OnInit } from "@angular/core";
 import { Cart, CartItem } from "../../models/cart.model";
 import { CartService } from "src/app/services/cart.service";
+import { PaystackOptions } from 'angular4-paystack';
+import { environment as environment_prod } from "src/environments/environment";
+import { environment } from "src/environments/environment.development";
+import { Router } from "@angular/router";
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Component({
   selector: "app-cart",
   templateUrl: "./cart.component.html",
 })
 export class CartComponent implements OnInit {
-  cart: Cart | undefined;
+  cart!: Cart;
   dataSource: Array<CartItem> = [];
   displayedColumns: Array<string> = [
     "product",
@@ -17,18 +22,43 @@ export class CartComponent implements OnInit {
     "total",
     "action",
   ];
+  title!: string;
 
-  constructor(private cartService: CartService) {}
+  options!: PaystackOptions 
 
-  ngOnInit(): void {
-    this.cartService.cart.subscribe((_cart) => {
-      this.cart = _cart
-      this.dataSource = this.cart.items;
-    })
+  constructor(
+    private cartService: CartService,
+    private router: Router, 
+    private _snackbar: MatSnackBar
+  ) {}
+
+  paymentInit() {
+    console.log('Payment initialized');
   }
 
+  paymentDone(ref: any) {
+    this.cartService.clearCart();
+    this.router.navigate(['/home'])
+  }
+
+  paymentCancel() {
+    this._snackbar.open('Payment failed', 'Ok', {duration: 5000});
+  }
+
+  ngOnInit(): void {
+    this.cartService.cart.subscribe((_cart: Cart) => {
+      this.cart = _cart;
+      this.dataSource = this.cart?.items;
+      this.options = {
+        amount: this.getTotal(this.cart?.items) * 100,
+        email: 'e.v.ezeonwuka@gmail.com',
+        ref: `${Math.ceil(Math.random() * 10e10)}`
+      }
+    });
+  }  
+
   getTotal(items: CartItem[]): number {
-    return this.cartService.getTotal(items)
+    return this.cartService.getTotal(items);
   }
 
   onClearCart(): void {
@@ -36,14 +66,14 @@ export class CartComponent implements OnInit {
   }
 
   onRemoveFromCart(item: CartItem): void {
-    this.cartService.removeFromCart(item)
+    this.cartService.removeFromCart(item);
   }
 
   onAddQuantity(item: CartItem): void {
-    this.cartService.addToCart(item)
+    this.cartService.addToCart(item);
   }
 
   onRemoveQuantity(item: CartItem): void {
-    this.cartService.decrementQuantity(item)
+    this.cartService.decrementQuantity(item);
   }
 }

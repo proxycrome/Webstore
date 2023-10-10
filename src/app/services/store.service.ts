@@ -63,6 +63,6 @@ export class StoreService {
 
   getAllCategories(): Observable<CategoryResponseData[]> {
     return this.httpClient
-      .get<CategoryResponseData[]>(`${STORE_BASE_URL}/api/v1/categories`)
+      .get<CategoryResponseData[]>(`${STORE_BASE_URL}/api/v1/categories?offset=0&limit=5`)
   }
 }
